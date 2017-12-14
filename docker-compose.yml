@@ -1,0 +1,34 @@
+version: '2'
+services:
+  dockbix-db:
+    image: monitoringartist/zabbix-db-mariadb
+    volumes:
+      - dockbix-db-storage:/var/lib/mysql
+      - backups:/backups
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - MARIADB_USER=dockbix
+      - MARIADB_PASS=my_password
+  dockbix-server:
+    image: monitoringartist/dockbix-xxl:latest
+    depends_on:
+      - dockbix-db
+    ports:
+      - "443:443"
+      - "10051:10051"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./ssl-nginx.conf:/etc/nginx/hosts.d/ssl-nginx.conf:ro
+      - ./certs:/etc/nginx/ssl:ro
+    links:
+      - dockbix-db:dockbix.db
+    environment:
+      - ZS_DBHost=dockbix.db
+      - ZS_DBUser=dockbix
+      - ZS_DBPassword=my_password
+volumes:
+  dockbix-db-storage:
+    driver: local
+  backups:
+    driver: local
+
